@@ -1,0 +1,10 @@
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: "root"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "todo-rh"
+    ports:
+      - "5434:5432"
+
