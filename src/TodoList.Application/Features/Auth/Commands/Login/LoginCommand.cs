@@ -1,11 +1,11 @@
 
 
 using System;
-using System.ComponentModel.DataAnnotations;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using TodoList.Application.Common.Interfaces;
 using TodoList.Domain.Entities;
+using TodoList.Application.Common.Exceptions;
 
 namespace TodoList.Application.Features.Auth.Command.Login;
 

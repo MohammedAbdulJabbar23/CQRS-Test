@@ -1,13 +1,11 @@
 
-
-
-using System.ComponentModel.DataAnnotations;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Query;
 using TodoList.Application.Common.Interfaces;
 using TodoList.Application.Features.Auth.Command.Login;
 using TodoList.Domain.Entities;
+using TodoList.Application.Common.Exceptions;
 
 namespace TodoList.Application.Features.Auth.Command.Register;
 
