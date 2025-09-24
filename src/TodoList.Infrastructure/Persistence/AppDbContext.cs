@@ -14,6 +14,8 @@ public class AppDbContext : IdentityDbContext<User>, IApplicationDbContext
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    public DbSet<TodoItem> TodoItems => Set<TodoItem>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -28,8 +30,3 @@ public class AppDbContext : IdentityDbContext<User>, IApplicationDbContext
 }
 
 
-public interface IApplicationDbContext
-{
-    DbSet<RefreshToken> RefreshTokens { get; }
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken);
-}

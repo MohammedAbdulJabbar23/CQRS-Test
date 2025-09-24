@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json.Serialization;
 using TodoList.Application.Common.Interfaces;
 using TodoList.Domain.Entities;
 using TodoList.Infrastructure.Persistence;
@@ -25,6 +26,7 @@ public static class DI
 
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<AppDbContext>());
+
 
         services.AddIdentity<User, IdentityRole>(options =>
         {
@@ -73,7 +75,7 @@ public static class DI
             .AddPolicy("RequireAuthenticated", policy => policy.RequireAuthenticatedUser());
 
         services.AddScoped<ITokenService, TokenService>();
-
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
         return services;
     }
 }
