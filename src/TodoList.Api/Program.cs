@@ -1,27 +1,76 @@
-using Microsoft.EntityFrameworkCore;
-using TodoList.Infrastructure.Persistence;
+using Microsoft.OpenApi.Models;
+using TodoList.Application;
+using TodoList.Infrastructure;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddOpenApi();
-
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-
-var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
+internal class Program
 {
-    app.MapOpenApi();
+    private static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddControllers();
+        builder.Services.AddEndpointsApiExplorer();
+
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "TodoList API",
+                Version = "v1",
+                Description = "A simple TodoList API with JWT authentication"
+            });
+
+            // Add JWT auth option in Swagger UI
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Enter 'Bearer {your token}'"
+            });
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] {}
+                }
+            });
+        });
+
+        // Add your custom infrastructure (DbContext, JWT config, etc.)
+        builder.Services
+        .AddInfrastructure(builder.Configuration)
+        .AddApplication();
+
+        var app = builder.Build();
+
+        // Enable Swagger
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "TodoList API v1");
+            });
+        }
+
+        // Middlewares
+        // app.UseHttpsRedirection();
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        app.MapControllers();
+
+        app.Run();
+    }
 }
-
-app.UseHttpsRedirection();
-app.UseAuthorization();
-app.MapControllers();
-
-app.Run();
-
