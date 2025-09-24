@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
+using TodoList.Api.Middlewares;
 using TodoList.Application;
 using TodoList.Infrastructure;
 using TodoList.Infrastructure.Persistence;
@@ -54,14 +55,12 @@ internal class Program
             });
         });
 
-        // Add your custom infrastructure (DbContext, JWT config, etc.)
         builder.Services
         .AddInfrastructure(builder.Configuration)
         .AddApplication();
 
         var app = builder.Build();
 
-        // Enable Swagger
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
@@ -80,7 +79,7 @@ internal class Program
             await SeedData.SeedDefaultDataAsync(scope.ServiceProvider);
         }
         app.MapControllers();
-
+        app.UseMiddleware<ExceptionHandlingMiddleware>();
         app.Run();
     }
 }

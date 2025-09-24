@@ -27,7 +27,7 @@ public class DeleteTodoCommandHandler : IRequestHandler<DeleteTodoCommand>
         var currentUserId = _currentUser.UserId;
         var todo = await _context.TodoItems
             .Where(c => c.Id == command.Id)
-            .Where(c => c.UserId == currentUserId)
+            // .Where(c => c.UserId == currentUserId)
             .FirstOrDefaultAsync(ct);
         if (todo == null)
         {

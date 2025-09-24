@@ -28,9 +28,11 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
     public async Task<RefreshTokenResponse> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
         var result = await _tokenService.RefreshTokenAsync(request.RefreshToken);
-        
+
         if (result == null)
+        {
             throw new ValidationException("Invalid refresh token");
+        }
 
         return new RefreshTokenResponse
         {

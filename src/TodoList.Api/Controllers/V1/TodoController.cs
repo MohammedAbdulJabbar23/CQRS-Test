@@ -38,6 +38,7 @@ public class TodoController : ControllerBase
         return Ok(result);
     }
     [HttpDelete]
+    [Authorize(Policy = "RequireAdmin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
@@ -58,13 +59,12 @@ public class TodoController : ControllerBase
         await _mediator.Send(new CompletedTodoCommand { Id = id });
         return NoContent();
     }
-    [HttpPut("{id:guid}")]
+    [HttpPut]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UpdateTodo(Guid id, [FromBody] UpdateTodoCommand command)
+    public async Task<IActionResult> UpdateTodo([FromBody] UpdateTodoCommand command)
     {
-        command.Id = id;
         await _mediator.Send(command);
         return NoContent();
     }
