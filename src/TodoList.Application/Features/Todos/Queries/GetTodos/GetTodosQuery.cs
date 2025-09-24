@@ -31,9 +31,10 @@ public class GetTodosQueryHandler : IRequestHandler<GetTodosQuery, PagedResult<T
     {
         var userId = _currentUserService.UserId;
         var query = _context.TodoItems.AsQueryable();
-        if (!request.IncludeDeleted)
+        if (request.IncludeDeleted)
         {
-            query = query.Where(t => !t.IsDeleted);
+            query = query
+                .IgnoreQueryFilters();
         }
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {

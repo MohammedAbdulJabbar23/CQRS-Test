@@ -6,6 +6,7 @@ using TodoList.Application.Common.Models;
 using TodoList.Application.Features.Auth.Command.Login;
 using TodoList.Application.Features.Auth.Command.Register;
 using TodoList.Application.Features.Todos.Commands.CreateTodo;
+using TodoList.Application.Features.Todos.Commands.DeleteTodo;
 using TodoList.Application.Features.Todos.Queries.GetTodos;
 
 namespace TodoList.Api.COntrollers.V1;
@@ -30,9 +31,22 @@ public class TodoController : ControllerBase
     }
     [HttpGet]
     [ProducesResponseType(typeof(PagedResult<TodoDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll([FromQuery]GetTodosQuery query, CancellationToken ct)
+    public async Task<IActionResult> GetAll([FromQuery] GetTodosQuery query, CancellationToken ct)
     {
         var result = await _mediator.Send(query);
         return Ok(result);
     }
+    [HttpDelete]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await _mediator.Send(new DeleteTodoCommand
+        {
+            Id = id
+        });
+        return NoContent();
+    }
+
 }
