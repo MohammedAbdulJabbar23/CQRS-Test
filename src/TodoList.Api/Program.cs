@@ -1,10 +1,11 @@
 using Microsoft.OpenApi.Models;
 using TodoList.Application;
 using TodoList.Infrastructure;
+using TodoList.Infrastructure.Persistence;
 
 internal class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -68,7 +69,10 @@ internal class Program
         // app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
-
+        using (var scope = app.Services.CreateScope())
+        {
+            await SeedData.SeedDefaultDataAsync(scope.ServiceProvider);
+        }
         app.MapControllers();
 
         app.Run();
