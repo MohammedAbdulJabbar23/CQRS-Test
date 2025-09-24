@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoList.Application.Features.Auth.Command.Login;
 using TodoList.Application.Features.Auth.Command.Register;
+using TodoList.Application.Features.Auth.Commands.RefreshToken;
 
 namespace TodoList.Api.COntrollers.V1;
 
@@ -30,6 +31,14 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterCommand command, CancellationToken ct)
+    {
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+    [HttpPost("refresh-token")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(RefreshTokenResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenCommand command)
     {
         var result = await _mediator.Send(command);
         return Ok(result);

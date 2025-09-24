@@ -7,6 +7,7 @@ using TodoList.Application.Features.Auth.Command.Login;
 using TodoList.Application.Features.Auth.Command.Register;
 using TodoList.Application.Features.Todos.Commands.CreateTodo;
 using TodoList.Application.Features.Todos.Commands.DeleteTodo;
+using TodoList.Application.Features.Todos.Commands.UpdateTodo;
 using TodoList.Application.Features.Todos.Queries.GetTodos;
 
 namespace TodoList.Api.COntrollers.V1;
@@ -48,5 +49,23 @@ public class TodoController : ControllerBase
         });
         return NoContent();
     }
-
+    [HttpPost("{id:guid}/complete")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> CompleteTodo(Guid id)
+    {
+        await _mediator.Send(new CompletedTodoCommand { Id = id });
+        return NoContent();
+    }
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> UpdateTodo(Guid id, [FromBody] UpdateTodoCommand command)
+    {
+        command.Id = id;
+        await _mediator.Send(command);
+        return NoContent();
+    }
 }
