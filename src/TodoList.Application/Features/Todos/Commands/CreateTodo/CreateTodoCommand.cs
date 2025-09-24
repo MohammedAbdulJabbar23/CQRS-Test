@@ -46,9 +46,6 @@ public class CreateTodoCommandHandler : IRequestHandler<CreateTodoCommand, Guid>
         };
         _context.TodoItems.Add(todo);
         await _context.SaveChangesAsync(cancellationToken);
-        await _mediator.Publish(
-            new TodoItemCreatedEvent(todo.Id, todo.Title, todo.UserId),
-            cancellationToken);
         return todo.Id;
     }
 }

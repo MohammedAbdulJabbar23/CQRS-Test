@@ -2,9 +2,11 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TodoList.Application.Common.Models;
 using TodoList.Application.Features.Auth.Command.Login;
 using TodoList.Application.Features.Auth.Command.Register;
 using TodoList.Application.Features.Todos.Commands.CreateTodo;
+using TodoList.Application.Features.Todos.Queries.GetTodos;
 
 namespace TodoList.Api.COntrollers.V1;
 
@@ -24,6 +26,13 @@ public class TodoController : ControllerBase
     public async Task<IActionResult> CreateTodo([FromBody] CreateTodoCommand command, CancellationToken ct)
     {
         var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+    [HttpGet]
+    [ProducesResponseType(typeof(PagedResult<TodoDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery]GetTodosQuery query, CancellationToken ct)
+    {
+        var result = await _mediator.Send(query);
         return Ok(result);
     }
 }
