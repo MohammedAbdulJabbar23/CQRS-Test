@@ -1,10 +1,44 @@
+version: "3.9"
+
 services:
   postgres:
     image: postgres:latest
+    container_name: todolist-db
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: "root"
-      POSTGRES_PASSWORD: "password"
-      POSTGRES_DB: "todo-rh"
+      POSTGRES_DB: todolist-rh
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
     ports:
-      - "5434:5432"
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - todolist-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d todolist-rh"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
+  api:
+    build:
+      context: .
+      dockerfile: ./src/TodoList.Api/Dockerfile
+    container_name: test-api
+    environment:
+      ASPNETCORE_URLS: "http://+:5162"
+    ports:
+      - "5000:5162"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - todolist-network
+
+volumes:
+  postgres_data:
+
+networks:
+  todolist-network:
+    driver: bridge

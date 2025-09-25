@@ -23,9 +23,9 @@ public class UpdateTodoCommandValidator : AbstractValidator<UpdateTodoCommand>
         RuleFor(x => x.Status)
             .IsInEnum().WithMessage("not corrent status value");
 
-        RuleFor(x => x.DueDate)
-            .GreaterThan(DateTime.UtcNow)
-            .When(x => x.DueDate.HasValue && x.Status != TodoStatus.Completed)
-            .WithMessage("Due date must be in the future for non-completed todos");
+        // RuleFor(x => x.DueDate)
+        //     .GreaterThan(DateTime.UtcNow)
+        //     .When(x => x.DueDate.HasValue && x.Status != TodoStatus.Completed)
+        //     .WithMessage("Due date must be in the future for non-completed todos");
     }
 }

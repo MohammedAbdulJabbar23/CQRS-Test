@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json.Serialization;
 using TodoList.Application.Common.Interfaces;
@@ -23,10 +24,11 @@ public static class DI
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
                 b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
-
+        services.AddHttpClient();
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<AppDbContext>());
-
+        services.AddHttpClient();
+        services.AddScoped<ILocationService, LocationService>();
 
         services.AddIdentity<User, IdentityRole>(options =>
         {
@@ -68,7 +70,6 @@ public static class DI
             };
         });
 
-        // Authorization Policies
         services.AddAuthorizationBuilder()
             .AddPolicy("RequireAdmin", policy => policy.RequireRole("Admin"))
             .AddPolicy("RequireUser", policy => policy.RequireRole("User"))

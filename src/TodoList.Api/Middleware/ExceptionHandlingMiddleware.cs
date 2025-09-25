@@ -1,17 +1,19 @@
 using System.Net;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
 using TodoList.Application.Common.Exceptions;
 
-namespace TodoList.Api.Middlewares;
+namespace TodoList.Api.Middleware;
 
-public class ExceptionHandlingMiddleware
+public class ExceptionMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
-    private readonly IWebHostEnvironment _env;
+    private readonly ILogger<ExceptionMiddleware> _logger;
+    private readonly IHostEnvironment _env;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger, IWebHostEnvironment env)
+    public ExceptionMiddleware(
+        RequestDelegate next, 
+        ILogger<ExceptionMiddleware> logger,
+        IHostEnvironment env)
     {
         _next = next;
         _logger = logger;
@@ -26,78 +28,74 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception occurred at {TimeUtc}", DateTime.UtcNow);
-
+            _logger.LogError(ex, "An unhandled exception occurred");
             await HandleExceptionAsync(context, ex);
         }
     }
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        ProblemDetails problemDetails;
-        int statusCode;
-
-        switch (exception)
-        {
-            case ValidationException validationEx:
-                statusCode = StatusCodes.Status400BadRequest;
-                problemDetails = new ValidationProblemDetails(validationEx.Errors)
-                {
-                    Title = "Validation Failed",
-                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                    Status = statusCode
-                };
-                break;
-
-            case NotFoundException notFoundEx:
-                statusCode = StatusCodes.Status404NotFound;
-                problemDetails = new ProblemDetails
-                {
-                    Title = "Resource Not Found",
-                    Detail = notFoundEx.Message,
-                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.4",
-                    Status = statusCode
-                };
-                break;
-
-            case ForbiddenAccessException forbiddenEx:
-                statusCode = StatusCodes.Status403Forbidden;
-                problemDetails = new ProblemDetails
-                {
-                    Title = "Forbidden",
-                    Detail = forbiddenEx.Message,
-                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3",
-                    Status = statusCode
-                };
-                break;
-
-            case UnauthorizedAccessException unauthorizedEx:
-                statusCode = StatusCodes.Status401Unauthorized;
-                problemDetails = new ProblemDetails
-                {
-                    Title = "Unauthorized",
-                    Detail = unauthorizedEx.Message,
-                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.2",
-                    Status = statusCode
-                };
-                break;
-
-            default:
-                statusCode = StatusCodes.Status500InternalServerError;
-                problemDetails = new ProblemDetails
-                {
-                    Title = "Internal Server Error",
-                    Detail = _env.IsDevelopment() ? exception.Message : "An unexpected error occurred.",
-                    Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
-                    Status = statusCode
-                };
-                break;
-        }
-
         context.Response.ContentType = "application/problem+json";
-        context.Response.StatusCode = statusCode;
 
-        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var problemDetails = exception switch
+        {
+            ValidationException validationException => new ValidationProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Validation Failed",
+                Detail = validationException.Message,
+                Instance = context.Request.Path,
+                Extensions = { ["errors"] = validationException.Errors }
+            },
+            NotFoundException notFoundException => new ProblemDetails
+            {
+                Status = StatusCodes.Status404NotFound,
+                Title = "Resource Not Found",
+                Detail = notFoundException.Message,
+                Instance = context.Request.Path
+            },
+            ForbiddenAccessException => new ProblemDetails
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Title = "Access Denied",
+                Detail = "You do not have permission to perform this action",
+                Instance = context.Request.Path
+            },
+            _ => new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "An error occurred",
+                Detail = _env.IsDevelopment() ? exception.ToString() : "An error occurred while processing your request",
+                Instance = context.Request.Path
+            }
+        };
+
+        problemDetails.Extensions["traceId"] = context.TraceIdentifier;
+        context.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
         await context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails, options));
+    }
+}
+
+public class ProblemDetails
+{
+    public int? Status { get; set; }
+    public string? Title { get; set; }
+    public string? Detail { get; set; }
+    public string? Instance { get; set; }
+    public string? Type { get; set; }
+    public Dictionary<string, object?> Extensions { get; set; } = new();
+}
+
+public class ValidationProblemDetails : ProblemDetails
+{
+    public ValidationProblemDetails()
+    {
+        Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
     }
 }
